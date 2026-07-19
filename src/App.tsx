@@ -1,14 +1,13 @@
-import { useConnect, useDisconnect, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { TokenList } from './components/TokenList';
 import { VisualStrip } from './components/VisualStrip';
 import { DustrLogo } from './components/DustrLogo';
-import { LogOut, Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Github, Twitter } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function App() {
-  const { connectors, connect } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
@@ -19,8 +18,6 @@ export default function App() {
     }
   }, [isDark]);
 
-  // Pick the first available connector (usually injected/MetaMask)
-  const connector = connectors[0];
 
   return (
     <div className="min-h-screen selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-black flex flex-col font-sans overflow-x-hidden">
@@ -31,34 +28,28 @@ export default function App() {
             <span className="sr-only">DUSTR</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="hidden sm:flex items-center gap-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              <span>Open sourced at</span>
+              <a href="https://github.com/your-username/dustr" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-950 dark:hover:text-zinc-50 transition-colors">
+                <Github className="w-4 h-4" />
+                <span className="sr-only">GitHub</span>
+              </a>
+              <a href="https://x.com/your_twitter_handle" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-950 dark:hover:text-zinc-50 transition-colors">
+                <Twitter className="w-4 h-4" />
+                <span className="sr-only">X (Twitter)</span>
+              </a>
+            </div>
+            
+            <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 hidden sm:block"></div>
+
             <button
               onClick={() => setIsDark(!isDark)}
-              className="p-2.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              className="p-2.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-500 dark:text-zinc-400"
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            {isConnected ? (
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-mono px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0a0a0a]">
-                  {address?.slice(0, 6)}...{address?.slice(-4)}
-                </span>
-                <button 
-                  onClick={() => disconnect()}
-                  className="p-2.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
-                  title="Disconnect"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => connect({ connector })}
-                className="px-6 py-2.5 bg-zinc-950 text-white dark:bg-white dark:text-black rounded-full text-sm font-medium hover:scale-105 transition-transform"
-              >
-                Connect Wallet
-              </button>
-            )}
+            <ConnectButton />
           </div>
         </div>
       </header>
