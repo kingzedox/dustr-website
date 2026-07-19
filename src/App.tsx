@@ -31,11 +31,11 @@ export default function App() {
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="hidden sm:flex items-center gap-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
               <span>Open sourced at</span>
-              <a href="https://github.com/your-username/dustr" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-950 dark:hover:text-zinc-50 transition-colors">
+              <a href="https://github.com/kingzedox/dustr-website" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-950 dark:hover:text-zinc-50 transition-colors">
                 <Github className="w-4 h-4" />
                 <span className="sr-only">GitHub</span>
               </a>
-              <a href="https://x.com/your_twitter_handle" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-950 dark:hover:text-zinc-50 transition-colors">
+              <a href="https://x.com/kingzedox0" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-950 dark:hover:text-zinc-50 transition-colors">
                 <Twitter className="w-4 h-4" />
                 <span className="sr-only">X (Twitter)</span>
               </a>

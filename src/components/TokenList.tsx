@@ -88,11 +88,7 @@ export function TokenList() {
 
       if (blockVisionKey) {
         try {
-          const res = await fetch(`https://corsproxy.io/?https://api.blockvision.org/v2/${bvNetwork}/account/tokens?address=${address}`, {
-            headers: {
-              'X-API-Key': blockVisionKey
-            }
-          });
+          const res = await fetch(`/api/blockvision?address=${address}`);
           
           if (res.ok) {
             const data = await res.json();
@@ -175,6 +171,35 @@ export function TokenList() {
         console.warn('Quoter multicall failed', e);
       }
 
+      // ─── DexScreener Pricing ──────────────────────────────────────────────────
+      const chunkedAddresses = [];
+      for (let i = 0; i < tokensWithBalance.length; i += 30) {
+        chunkedAddresses.push(tokensWithBalance.slice(i, i + 30).map(t => t.address).join(','));
+      }
+
+      const dexPrices: Record<string, number> = {};
+      try {
+        for (const chunk of chunkedAddresses) {
+          const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${chunk}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.pairs) {
+              data.pairs.forEach((pair: any) => {
+                if (pair.baseToken?.address) {
+                  const addr = pair.baseToken.address.toLowerCase();
+                  if (!dexPrices[addr] && pair.priceUsd) {
+                    dexPrices[addr] = parseFloat(pair.priceUsd);
+                  }
+                }
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Dexscreener fetch failed", e);
+      }
+      // ──────────────────────────────────────────────────────────────────────────
+
       // Build the final token list with USD values
       const dustTokens: Token[] = [];
 
@@ -183,7 +208,12 @@ export function TokenList() {
         const quoteResult = quoteResults[i] || { status: 'failure' };
 
         let usdValue = 0;
-        if (quoteResult.status === 'success' && quoteResult.result) {
+        const dexPrice = dexPrices[token.address.toLowerCase()];
+        
+        if (dexPrice) {
+          const numTokens = Number(formatUnits(token.balance, token.decimals));
+          usdValue = numTokens * dexPrice;
+        } else if (quoteResult.status === 'success' && quoteResult.result) {
           const amountOut = (quoteResult.result as any)[0] as bigint;
           usdValue = Number(formatUnits(amountOut, USDC_DECIMALS));
         }

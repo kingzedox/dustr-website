@@ -15,7 +15,7 @@ export const getContractAddresses = (chainId?: number) => {
 
   // Mainnet (default)
   return {
-    DUST_SWEEPER_ADDRESS: '0x1234567890123456789012345678901234567890' as `0x${string}`, // TODO: Update after mainnet deploy
+    DUST_SWEEPER_ADDRESS: '0x10a3017131670bfF89d7a28C484bD58c4b25e44e' as `0x${string}`, // TODO: Update after mainnet deploy
     USDC_ADDRESS: '0x754704Bc059F8C67012fEd69BC8A327a5aafb603' as `0x${string}`,
     WMON_ADDRESS: '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A' as `0x${string}`,
     QUOTER_V2_ADDRESS: '0x661e93cca42afacb172121ef892830ca3b70f08d' as `0x${string}`,

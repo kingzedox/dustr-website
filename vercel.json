@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/blockvision/:match*",
+      "destination": "https://api.blockvision.org/v2/:match*"
+    }
+  ]
+}
