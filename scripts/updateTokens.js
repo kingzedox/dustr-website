@@ -38,7 +38,7 @@ async function updateTokens() {
   }
 
   // 3. SCRAPE GECKOTERMINAL
-  const MAX_PAGES = 5; // Scrape up to 5 pages of top pools
+  const MAX_PAGES = 50; // Scrape up to 50 pages of top pools to get EVERYTHING
   let newTokensFound = 0;
 
   try {
