@@ -99,19 +99,19 @@ export function TokenList() {
         console.warn('BlockVision fetch failed, falling back to static multicall', e);
       }
 
-      // Fallback: Multicall massive JSON token list if BlockVision wasn't used or failed
-      if (!usingBlockVision) {
-        // Load our massive Token Dictionary
-        const knownTokens = monadTokens;
+      const foundAddresses = new Set(tokensWithBalance.map(t => t.address.toLowerCase()));
+
+      // ALWAYS run our massive JSON token list to catch tokens BlockVision missed
+      const knownTokens = monadTokens;
         
-        // Reduce chunk size to 50 to avoid RPC payload size rejections
-        const CHUNK_SIZE = 50;
+      // Reduce chunk size to 50 to avoid RPC payload size rejections
+      const CHUNK_SIZE = 50;
         
         for (let i = 0; i < knownTokens.length; i += CHUNK_SIZE) {
           const chunk = knownTokens.slice(i, i + CHUNK_SIZE);
           
           const balanceCalls = chunk.map((token: any) => ({
-            address: token.address as `0x${string}`,
+            address: token.address.toLowerCase() as `0x${string}`,
             abi: erc20ReadAbi,
             functionName: 'balanceOf' as const,
             args: [address] as const,
@@ -128,7 +128,7 @@ export function TokenList() {
               const result = balanceResults[j];
 
               if (result.status === 'success' && result.result && (result.result as bigint) > 0n) {
-                if (!EXCLUDED_SYMBOLS.has(token.symbol)) {
+                if (!EXCLUDED_SYMBOLS.has(token.symbol) && !foundAddresses.has(token.address.toLowerCase())) {
                   tokensWithBalance.push({
                     address: token.address,
                     symbol: token.symbol,
@@ -160,7 +160,7 @@ export function TokenList() {
         functionName: 'quoteExactInputSingle' as const,
         args: [
           {
-            tokenIn: token.address,
+            tokenIn: token.address.toLowerCase() as `0x${string}`,
             tokenOut: USDC_ADDRESS,
             amountIn: token.balance,
             fee: QUOTE_FEE,
