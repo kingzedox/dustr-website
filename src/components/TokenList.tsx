@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useAccount, usePublicClient } from 'wagmi';
+import { useAccount, usePublicClient, useWriteContract } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useSendCalls, useCallsStatus } from 'wagmi/experimental';
 import { parseUnits, encodeFunctionData, erc20Abi, formatUnits } from 'viem';
 import { Loader2, Check, Wallet, RefreshCcw } from 'lucide-react';
 import {
@@ -48,17 +47,9 @@ export function TokenList() {
   const [isLoading, setIsLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSweeping, setIsSweeping] = useState(false);
 
-  const { sendCalls, data: callsData, isPending: isSendingCalls } = useSendCalls();
-  const callsId = (typeof callsData === 'string' ? callsData : (callsData as any)?.id) as string | undefined;
-
-  const { data: callsStatus } = useCallsStatus({
-    id: callsId || '',
-    query: {
-      enabled: !!callsId,
-      refetchInterval: (data) => (data?.state.data?.status === 'pending' ? 2000 : false),
-    },
-  });
+  const { writeContractAsync } = useWriteContract();
 
   const { DUST_SWEEPER_ADDRESS, USDC_ADDRESS, QUOTER_V2_ADDRESS } = getContractAddresses(publicClient?.chain?.id);
 
@@ -268,51 +259,49 @@ export function TokenList() {
 
   // ─── Sweep handler — batch approve + sweepDust via EIP-5792 ────────────
 
-  const handleSweep = () => {
+  const handleSweep = async () => {
     if (selectedAddresses.size === 0) return;
 
     const selectedTokens = tokens.filter((t) => selectedAddresses.has(t.address));
+    setIsSweeping(true);
+    setErrorMsg('');
+    setSuccessMsg('');
 
-    // Build batch: N approvals + 1 sweepDust call
-    const calls = selectedTokens.map((token) => ({
-      to: token.address as `0x${string}`,
-      data: encodeFunctionData({
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [DUST_SWEEPER_ADDRESS, token.balance],
-      }),
-      value: 0n,
-    }));
+    try {
+      // 1. Approve all tokens one by one
+      for (const token of selectedTokens) {
+        await writeContractAsync({
+          address: token.address as `0x${string}`,
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [DUST_SWEEPER_ADDRESS, token.balance],
+        });
+      }
 
-    // The sweep call itself
-    calls.push({
-      to: DUST_SWEEPER_ADDRESS as `0x${string}`,
-      data: encodeFunctionData({
+      // 2. Call sweepDust
+      await writeContractAsync({
+        address: DUST_SWEEPER_ADDRESS as `0x${string}`,
         abi: dustSweeperAbi,
         functionName: 'sweepDust',
         args: [
           selectedTokens.map((t) => t.address),
           selectedTokens.map((t) => t.balance),
-          0n, // minAmountOut — 0 for hackathon demo, add slippage UI later
+          0n, // minAmountOut — 0 for hackathon demo
         ],
-      }),
-      value: 0n,
-    });
+      });
 
-    sendCalls({ calls });
-  };
-
-  // ─── Watch for tx completion ───────────────────────────────────────────
-
-  useEffect(() => {
-    if (callsStatus?.status === 'success') {
       const sweptCount = selectedAddresses.size;
       setSuccessMsg(`Swept ${sweptCount} useless token${sweptCount !== 1 ? 's' : ''} into USDC!`);
       setTimeout(loadTokens, 3000);
+    } catch (err: any) {
+      console.error('Sweep failed:', err);
+      if (err.message && !err.message.includes('User rejected')) {
+        setErrorMsg('Transaction failed. Check console for details.');
+      }
+    } finally {
+      setIsSweeping(false);
     }
-  }, [callsStatus?.status]);
-
-  const isSweeping = isSendingCalls || callsStatus?.status === 'pending';
+  };
   const totalValue = tokens
     .filter((t) => selectedAddresses.has(t.address))
     .reduce((sum, t) => sum + t.usdValue, 0);
