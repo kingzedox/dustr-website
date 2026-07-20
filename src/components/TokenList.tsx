@@ -120,6 +120,7 @@ export function TokenList() {
           try {
             const balanceResults = await publicClient.multicall({
               contracts: balanceCalls,
+              allowFailure: true,
             } as any);
 
             for (let j = 0; j < chunk.length; j++) {
@@ -172,6 +173,7 @@ export function TokenList() {
       try {
         quoteResults = await publicClient.multicall({
           contracts: quoteCalls,
+          allowFailure: true,
         } as any);
       } catch (e) {
         console.warn('Quoter multicall failed', e);
