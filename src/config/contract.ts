@@ -118,6 +118,7 @@ export const getKnownTokens = (chainId?: number): KnownToken[] => {
     // ── Monad community tokens ──
     { address: '0x350035555E10d9AfAF1566AaebfCeD5BA6C27777', symbol: 'CHOG',   decimals: 18 },
     { address: '0x29fF09Dcd83ec33CE5BE1E388AE98C7A7F9faB07', symbol: 'DAK',    decimals: 18 },
+    { address: '0x43cf5407bda1400498B8064D50a7e17528d87777', symbol: 'JAMES',  decimals: 18 },
   ];
 };
 

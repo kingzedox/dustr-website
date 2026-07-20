@@ -77,27 +77,25 @@ export function TokenList() {
       
       let usingBlockVision = false;
 
-      if (blockVisionKey) {
-        try {
-          const res = await fetch(`/api/blockvision?address=${address}`);
-          
-          if (res.ok) {
-            const data = await res.json();
-            if (data.code === 0 && data.result?.data) {
-              usingBlockVision = true;
-              tokensWithBalance = data.result.data
-                .filter((t: any) => !t.isLpToken && parseFloat(t.balance) > 0 && !EXCLUDED_SYMBOLS.has(t.symbol))
-                .map((t: any) => ({
-                  address: t.contractAddress as `0x${string}`,
-                  symbol: t.symbol,
-                  decimals: t.decimal,
-                  balance: parseUnits(Number(t.balance).toFixed(t.decimal), t.decimal)
-                }));
-            }
+      try {
+        const res = await fetch(`/api/blockvision?address=${address}`);
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.code === 0 && data.result?.data) {
+            usingBlockVision = true;
+            tokensWithBalance = data.result.data
+              .filter((t: any) => !t.isLpToken && parseFloat(t.balance) > 0 && !EXCLUDED_SYMBOLS.has(t.symbol))
+              .map((t: any) => ({
+                address: t.contractAddress as `0x${string}`,
+                symbol: t.symbol,
+                decimals: t.decimal,
+                balance: parseUnits(Number(t.balance).toFixed(t.decimal), t.decimal)
+              }));
           }
-        } catch (e) {
-          console.warn('BlockVision fetch failed, falling back to static multicall', e);
         }
+      } catch (e) {
+        console.warn('BlockVision fetch failed, falling back to static multicall', e);
       }
 
       // Fallback: Multicall known tokens if BlockVision wasn't used or failed
