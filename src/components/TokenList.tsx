@@ -103,8 +103,8 @@ export function TokenList() {
         // Load our massive Token Dictionary (currently seeded with top tokens)
         const knownTokens = require('../config/monad_tokens.json');
         
-        // We chunk the multicall to ensure we don't hit RPC payload limits
-        const CHUNK_SIZE = 200;
+        // Reduce chunk size to 50 to avoid RPC payload size rejections
+        const CHUNK_SIZE = 50;
         
         for (let i = 0; i < knownTokens.length; i += CHUNK_SIZE) {
           const chunk = knownTokens.slice(i, i + CHUNK_SIZE);
@@ -116,24 +116,29 @@ export function TokenList() {
             args: [address] as const,
           }));
 
-          const balanceResults = await publicClient.multicall({
-            contracts: balanceCalls,
-          } as any);
+          try {
+            const balanceResults = await publicClient.multicall({
+              contracts: balanceCalls,
+            } as any);
 
-          for (let j = 0; j < chunk.length; j++) {
-            const token = chunk[j];
-            const result = balanceResults[j];
+            for (let j = 0; j < chunk.length; j++) {
+              const token = chunk[j];
+              const result = balanceResults[j];
 
-            if (result.status === 'success' && result.result && (result.result as bigint) > 0n) {
-              if (!EXCLUDED_SYMBOLS.has(token.symbol)) {
-                tokensWithBalance.push({
-                  address: token.address,
-                  symbol: token.symbol,
-                  decimals: token.decimals,
-                  balance: result.result as bigint,
-                });
+              if (result.status === 'success' && result.result && (result.result as bigint) > 0n) {
+                if (!EXCLUDED_SYMBOLS.has(token.symbol)) {
+                  tokensWithBalance.push({
+                    address: token.address,
+                    symbol: token.symbol,
+                    decimals: token.decimals,
+                    balance: result.result as bigint,
+                  });
+                }
               }
             }
+          } catch (chunkError) {
+            console.warn(`RPC failed to fetch balance chunk starting at index ${i}`, chunkError);
+            // We just skip this failing chunk and move to the next one instead of crashing the whole app
           }
         }
       }
