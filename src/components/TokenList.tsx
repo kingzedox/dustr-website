@@ -423,7 +423,7 @@ export function TokenList() {
                 </>
               )}
             </button>
-            {callsStatus?.status === 'pending' && (
+            {isSweeping && (
               <p className="text-center text-xs text-zinc-500 dark:text-zinc-400 mt-4 animate-pulse font-mono uppercase tracking-widest">
                 Processing via EIP-5792...
               </p>
