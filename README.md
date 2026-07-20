@@ -57,3 +57,15 @@ npm run build
 ## Deployment
 
 The application is completely static and can be deployed to Vercel, Netlify, Render, or any standard web host simply by building the `dist` folder.
+
+## 🛡️ Indexer-less Multicall Architecture
+
+Because Monad Mainnet is a brand-new blockchain, traditional third-party indexers (like BlockVision or Alchemy) are often rate-limited, paywalled, or lagging behind real-time events. To guarantee a perfect, seamless user experience without requiring users to manually paste contract addresses, **Dustr employs an industry-standard Indexer-less Fallback Architecture**.
+
+### How it Works (The Uniswap Approach)
+1. **The Massive Token Dictionary**: Dustr bundles a highly optimized JSON dictionary (`monad_tokens.json`) containing the most liquid and verified tokens on Monad.
+2. **Dynamic Chunked Multicall**: If the primary indexer fails or hits a paywall limit, Dustr automatically intercepts the failure and falls back to our Token Dictionary.
+3. **Lightning Fast On-Chain Queries**: Dustr slices the massive token dictionary into chunks and fires concurrent on-chain `multicall` requests directly to the RPC node. This checks the user's balance for *hundreds of tokens simultaneously* in under a second.
+
+This robust, decentralized architecture ensures Dustr is 100% free to operate, un-paywallable by centralized indexers, and provides a magical "ease of use" experience for finding dust tokens.
+

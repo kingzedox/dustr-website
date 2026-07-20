@@ -98,30 +98,41 @@ export function TokenList() {
         console.warn('BlockVision fetch failed, falling back to static multicall', e);
       }
 
-      // Fallback: Multicall known tokens if BlockVision wasn't used or failed
+      // Fallback: Multicall massive JSON token list if BlockVision wasn't used or failed
       if (!usingBlockVision) {
-        const knownTokens = getKnownTokens(publicClient?.chain?.id);
-        const balanceCalls = knownTokens.map((token) => ({
-          address: token.address,
-          abi: erc20ReadAbi,
-          functionName: 'balanceOf' as const,
-          args: [address] as const,
-        }));
+        // Load our massive Token Dictionary (currently seeded with top tokens)
+        const knownTokens = require('../config/monad_tokens.json');
+        
+        // We chunk the multicall to ensure we don't hit RPC payload limits
+        const CHUNK_SIZE = 200;
+        
+        for (let i = 0; i < knownTokens.length; i += CHUNK_SIZE) {
+          const chunk = knownTokens.slice(i, i + CHUNK_SIZE);
+          
+          const balanceCalls = chunk.map((token: any) => ({
+            address: token.address as `0x${string}`,
+            abi: erc20ReadAbi,
+            functionName: 'balanceOf' as const,
+            args: [address] as const,
+          }));
 
-        const balanceResults = await publicClient.multicall({
-          contracts: balanceCalls,
-        } as any);
+          const balanceResults = await publicClient.multicall({
+            contracts: balanceCalls,
+          } as any);
 
-        for (let i = 0; i < knownTokens.length; i++) {
-          const token = knownTokens[i];
-          const result = balanceResults[i];
+          for (let j = 0; j < chunk.length; j++) {
+            const token = chunk[j];
+            const result = balanceResults[j];
 
-          if (result.status === 'success' && result.result && (result.result as bigint) > 0n) {
-            if (!EXCLUDED_SYMBOLS.has(token.symbol)) {
-              tokensWithBalance.push({
-                ...token,
-                balance: result.result as bigint,
-              });
+            if (result.status === 'success' && result.result && (result.result as bigint) > 0n) {
+              if (!EXCLUDED_SYMBOLS.has(token.symbol)) {
+                tokensWithBalance.push({
+                  address: token.address,
+                  symbol: token.symbol,
+                  decimals: token.decimals,
+                  balance: result.result as bigint,
+                });
+              }
             }
           }
         }
