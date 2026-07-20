@@ -11,6 +11,7 @@ import {
   getKnownTokens,
   EXCLUDED_SYMBOLS,
 } from '../config/contract';
+import monadTokens from '../config/monad_tokens.json';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -100,8 +101,8 @@ export function TokenList() {
 
       // Fallback: Multicall massive JSON token list if BlockVision wasn't used or failed
       if (!usingBlockVision) {
-        // Load our massive Token Dictionary (currently seeded with top tokens)
-        const knownTokens = require('../config/monad_tokens.json');
+        // Load our massive Token Dictionary
+        const knownTokens = monadTokens;
         
         // Reduce chunk size to 50 to avoid RPC payload size rejections
         const CHUNK_SIZE = 50;
