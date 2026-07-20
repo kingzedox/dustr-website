@@ -2,6 +2,8 @@
 
 The frontend client for Dustr — allowing users to seamlessly sweep their wallet dust into USDC on Monad.
 
+**⛓️ Smart Contract Repository:** [dustr](https://github.com/kingzedox/dustr)
+
 ## Features
 
 - **Multi-Wallet Support:** Powered by RainbowKit for native support of MetaMask, Backpack, WalletConnect, and more.
@@ -71,9 +73,9 @@ This robust, decentralized architecture ensures Dustr is 100% free to operate, u
 
 ### 🤖 Automated Token Discovery (GitHub Actions)
 To ensure the Token Dictionary stays perfectly up-to-date as the Monad ecosystem grows, this repository includes an autonomous **GitHub Actions Cron Job**.
-- Every 6 hours, GitHub spins up a free cloud server and runs `scripts/updateTokens.js`.
+- Every 6 hours, GitHub spins up a free cloud server and runs [`scripts/updateTokens.js`](https://github.com/kingzedox/dustr-website/blob/main/scripts/updateTokens.js).
 - The script connects to the **GeckoTerminal API** and scrapes up to 50 pages of the newest, most active Monad liquidity pools.
-- It extracts the token addresses, symbols, and decimals, deduplicates them, and safely merges them into `monad_tokens.json`.
+- It extracts the token addresses, symbols, and decimals, deduplicates them, and safely merges them into [`src/config/monad_tokens.json`](https://github.com/kingzedox/dustr-website/blob/main/src/config/monad_tokens.json).
 - If new tokens are found, GitHub automatically commits and pushes the updated dictionary, which instantly triggers a Vercel deployment of the live site.
 - **Result:** The Dustr fallback indexer gets smarter and expands its token coverage every 6 hours without human intervention!
 
